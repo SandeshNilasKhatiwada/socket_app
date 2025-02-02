@@ -1,0 +1,25 @@
+# Node.js
+node_modules/
+.env
+package-lock.json
+
+# React
+node_modules/
+.env
+package-lock.json
+*.log
+
+# Flutter
+**/build/
+**/.dart_tool/
+**/.flutter-plugins/
+**/.packages
+**/.flutter-plugins-dependencies
+**/.idea/
+pubspec.lock
+
+# General
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
