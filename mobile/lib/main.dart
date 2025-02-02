@@ -1,61 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'pages/login.dart';
+import 'pages/register.dart';
+import './services/auth_services.dart';
 
 void main() {
   runApp(ChatApp());
 }
 
-class ChatApp extends StatelessWidget {
-  const ChatApp({super.key});
-
+class ChatApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: ChatScreen(),
-    );
-  }
+  _ChatAppState createState() => _ChatAppState();
 }
 
-class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
-
-  @override
-  _ChatScreenState createState() => _ChatScreenState();
-}
-
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatAppState extends State<ChatApp> {
+  String? token;
+  String? username;
   IO.Socket? socket;
   List<String> messages = [];
   TextEditingController messageController = TextEditingController();
+  bool showLogin = true;
 
   @override
   void initState() {
     super.initState();
-    connectToSocket();
+    checkAuth();
+  }
+
+  void checkAuth() async {
+    AuthService authService = AuthService();
+    String? storedToken = await authService.getToken();
+    if (storedToken != null) {
+      setState(() {
+        token = storedToken;
+      });
+      connectToSocket();
+    }
   }
 
   void connectToSocket() {
-    socket = IO.io('http://localhost:5000', <String, dynamic>{
+    socket = IO.io('http://localhost:5000', {
+      // Replace with your local IP
       'transports': ['websocket'],
-      'autoConnect': false,
+      'auth': {'token': token}
     });
 
-    socket!.connect();
-
     socket!.onConnect((_) {
-      print('Connected to server');
+      print("✅ Connected to Socket.IO server");
     });
 
     socket!.on("receive_message", (data) {
-      print("Message received: $data");
+      print("📩 New message received: ${data['username']}: ${data['message']}");
+
+      // Fix: Convert Map to formatted String before adding to the list
       setState(() {
-        messages.add(data);
+        messages.add("${data['username']}: ${data['message']}");
       });
     });
 
     socket!.onDisconnect((_) {
-      print('Disconnected from server');
+      print("❌ Disconnected");
     });
   }
 
@@ -67,44 +71,61 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   @override
-  void dispose() {
-    socket!.dispose();
-    messageController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Flutter Chat")),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                return ListTile(title: Text(messages[index]));
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: messageController,
-                    decoration: InputDecoration(labelText: "Enter message"),
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: Text("Chat App")),
+        body: token == null
+            ? showLogin
+                ? LoginPage(
+                    onRegisterSelected: () => setState(() => showLogin = false),
+                    onLoginSuccess: (user) {
+                      setState(() {
+                        username = user;
+                        token = token;
+                      });
+                      connectToSocket();
+                    })
+                : RegisterPage(
+                    onLoginSelected: () => setState(() => showLogin = true))
+            : Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(
+                            messages[index],
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: sendMessage,
-                )
-              ],
-            ),
-          ),
-        ],
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: messageController,
+                            decoration: InputDecoration(
+                              labelText: "Type a message...",
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: sendMessage,
+                          child: Text("Send"),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }

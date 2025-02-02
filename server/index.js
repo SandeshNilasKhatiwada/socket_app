@@ -1,33 +1,29 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io');
 const cors = require('cors');
+const connectDB = require('./config/db');
+const authRoutes = require('./routes/auth.routes');
+const configureSocket = require('./sockets/socket');
 
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: '*', // React frontend URL
-    methods: ['GET', 'POST'],
-  },
-});
-
+// Middleware
+app.use(express.json());
 app.use(cors());
 
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
+// Database Connection
+connectDB();
 
-  socket.on('send_message', (data) => {
-    console.log('Message received from client:', data);
-    io.emit('receive_message', data); // Broadcast message to all clients
-  });
+// Routes
+app.use('/api/auth', authRoutes);
 
-  socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
-  });
-});
+// Socket.io Configuration
+configureSocket(server);
 
-server.listen(5000, () => {
-  console.log('Server running on http://localhost:5000');
-});
+// Start Server
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`),
+);
