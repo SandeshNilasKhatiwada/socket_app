@@ -1,6 +1,6 @@
+const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 
 const registerUser = async (username, email, password) => {
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -11,7 +11,6 @@ const registerUser = async (username, email, password) => {
 
 const loginUser = async (email, password) => {
   const user = await User.findOne({ email });
-
   if (!user) throw new Error('User not found');
 
   const isMatch = await bcrypt.compare(password, user.password);

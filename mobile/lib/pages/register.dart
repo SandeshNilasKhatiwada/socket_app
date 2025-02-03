@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/auth_services.dart';
+import '../services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   final VoidCallback onLoginSelected;
@@ -38,25 +38,33 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text("Register", style: TextStyle(fontSize: 24)),
-        TextField(
-            controller: usernameController,
-            decoration: InputDecoration(labelText: "Username")),
-        TextField(
-            controller: emailController,
-            decoration: InputDecoration(labelText: "Email")),
-        TextField(
-            controller: passwordController,
-            obscureText: true,
-            decoration: InputDecoration(labelText: "Password")),
-        ElevatedButton(onPressed: register, child: Text("Register")),
-        TextButton(
-            onPressed: widget.onLoginSelected,
-            child: Text("Already have an account? Login")),
-        Text(message, style: TextStyle(color: Colors.green)),
-      ],
+    return Scaffold(
+      appBar: AppBar(title: Text("Register")),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+                controller: usernameController,
+                decoration: InputDecoration(labelText: "Username")),
+            TextField(
+                controller: emailController,
+                decoration: InputDecoration(labelText: "Email")),
+            TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: "Password")),
+            SizedBox(height: 20),
+            ElevatedButton(onPressed: register, child: Text("Register")),
+            if (message.isNotEmpty)
+              Text(message, style: TextStyle(color: Colors.green)),
+            TextButton(
+                onPressed: widget.onLoginSelected,
+                child: Text("Already have an account? Login"))
+          ],
+        ),
+      ),
     );
   }
 }

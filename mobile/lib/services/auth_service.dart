@@ -3,12 +3,11 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  final String baseUrl =
-      "http://192.168.1.100:5000/api"; // Replace with your local server IP
+  final String baseUrl = "http://localhost:5000/api"; // Backend URL
 
   Future<bool> register(String username, String email, String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/auth/register'),
+      Uri.parse('$baseUrl/register'),
       body: jsonEncode(
           {"username": username, "email": email, "password": password}),
       headers: {"Content-Type": "application/json"},
@@ -19,7 +18,7 @@ class AuthService {
 
   Future<bool> login(String email, String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/auth/login'),
+      Uri.parse('$baseUrl/login'),
       body: jsonEncode({"email": email, "password": password}),
       headers: {"Content-Type": "application/json"},
     );
@@ -43,5 +42,10 @@ class AuthService {
   Future<String?> getToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
+  }
+
+  Future<String?> getUsername() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('username');
   }
 }

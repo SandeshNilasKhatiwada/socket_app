@@ -1,32 +1,16 @@
-const { Server } = require('socket.io');
-const { authenticateSocket } = require('../middlewares/auth.middleware');
-
-const configureSocket = (server) => {
-  const io = new Server(server, {
-    cors: {
-      origin: '*',
-      methods: ['GET', 'POST'],
-    },
-  });
-
-  io.use(authenticateSocket);
-
+const chatSocket = (io) => {
   io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.user.username}`);
+    console.log('✅ New user connected');
 
+    // Listen for "send_message" event and broadcast without saving
     socket.on('send_message', (data) => {
-      io.emit('receive_message', {
-        username: socket.user.username,
-        message: data,
-      });
+      io.emit('receive_message', data); // Broadcast message to all clients
     });
 
     socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.user.username}`);
+      console.log('❌ User disconnected');
     });
   });
-
-  return io;
 };
 
-module.exports = configureSocket;
+module.exports = chatSocket;
